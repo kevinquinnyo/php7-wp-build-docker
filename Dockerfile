@@ -7,14 +7,15 @@ ENV UBUNTU_RELEASE __UBUNTU_RELEASE__
 
 # Install tools needed by install scripts below
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && \
-	apt-get -y update && \
-	apt-get -y install \
-	curl \
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
+RUN apt-get -y update
+RUN apt-get -y install gcc-5
+RUN apt-get -y install curl \
 	sudo\
 	wget\
 	build-essential
-	gcc-5 \
+	gcc-5
 	libxml2-dev \
 	openssl-dev \
 	libssl-dev \
@@ -29,7 +30,6 @@ RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && \
 	libgdbm-dev \
 	libdb*-dev \
 	libdb4o-cil-dev \
-	libenchant-dev \
 	libjpe \
 	libpng12-dev \
 	libxpm-dev \
@@ -40,12 +40,10 @@ RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && \
 	libicu-dev \
 	icu-devtools \
 	g++ \
-	libldap2-dev \
 	mysql \
 	mysql-common \
 	mysql-client \
 	libmysqlclient-dev \
-	unixodbc-dev \
 	libpq-dev \
 	libpspell-dev \
 	librecode-dev \
@@ -55,6 +53,7 @@ RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && \
 
 # Download php
 WORKDIR /tmp
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
 RUN curl -L https://github.com/php/php-src/archive/${PHP_SHA}.tar.gz | tar xvz
 
 # Build php
@@ -74,9 +73,6 @@ RUN ./configure \
 	--with-layout=GNU \
 	--with-pear=/usr/share/php \
 	--enable-calendar \
-	--enable-sysvsem \
-	--enable-sysvshm \
-	--enable-sysvmsg \
 	--enable-bcmath \
 	--with-bz2 \
 	--enable-ctype \
@@ -100,7 +96,6 @@ RUN ./configure \
 	--with-mysql-sock=/var/run/mysqld/mysqld.sock \
 	--without-mm \
 	--with-curl=shared,/usr \
-	--with-enchant=shared,/usr \
 	--with-zlib-dir=/usr \
 	--with-gd=shared,/usr \
 	--enable-gd-native-ttf \
@@ -112,22 +107,25 @@ RUN ./configure \
 	--with-vpx-dir=shared,/usr \
 	--enable-intl=shared \
 	--without-t1lib \
-	--with-ldap-sasl=/usr \
 	--with-mysql=shared,/usr \
 	--with-mysqli=shared,/usr/bin/mysql_config \
 	--with-pspell=shared,/usr \
-	--with-unixODBC=shared,/usr \
 	--with-recode=shared,/usr \
 	--with-xsl=shared,/usr \
 	--with-tidy=shared,/usr \
 	--with-xmlrpc=shared \
-	--with-pgsql=shared,/usr \
 	--enable-fpm
 
-# Install Ruby so we can install fpm for building the Debian package
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:brightbox/ruby-ng
-RUN apt-get -y update && apt-get -y install ruby2.1 ruby2.1-dev
-RUN echo "gem: --no-ri --no-rdoc" > ~/.gemrc
-RUN gem install fpm
+# Install wordpress to train php against
+WORKDIR /tmp
+RUN curl https://wordpress.org/latest.tar.gz | tar xzv
+
+RUN apt-get -y install checkinstall
+WORKDIR /tmp/php-src-${PHP_SHA}/
+RUN make clean
+RUN make -j2 prof-gen
+RUN sapi/cgi/php -T 1000 /tmp/wordpress/index.php
+RUN make prof-clean
+RUN make -j2 prof-use
+RUN checkinstall -y --pkgname="php-${PHP_VERSION}-${PHP_SHA}" -D make install
 
