@@ -131,8 +131,3 @@ RUN apt-get -y update && apt-get -y install ruby2.1 ruby2.1-dev
 RUN echo "gem: --no-ri --no-rdoc" > ~/.gemrc
 RUN gem install fpm
 
-# Copy all dependencies and build the Debian package
-WORKDIR /tmp/php-build/install
-ADD /create_package.sh /tmp/mcrouter-build/install/create_package.sh
-RUN curl -L https://github.com/bmorton/futhark/raw/master/sh/cpld.bash -o /tmp/mcrouter-build/install/copy_deps.sh && chmod +x /tmp/mcrouter-build/install/copy_deps.sh
-RUN ./create_package.sh ${MCROUTER_VERSION}-${MCROUTER_SHA}
