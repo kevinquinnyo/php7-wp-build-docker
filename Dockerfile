@@ -12,10 +12,10 @@ RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
 RUN apt-get -y update
 RUN apt-get -y install gcc-5
 RUN apt-get -y install curl \
-	sudo\
-	wget\
-	build-essential
-	gcc-5
+	sudo \
+	wget \
+	build-essential \
+	gcc-5 \
 	libxml2-dev \
 	openssl-dev \
 	libssl-dev \
