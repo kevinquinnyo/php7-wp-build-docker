@@ -15,9 +15,14 @@ RUN apt-get -y install curl \
 	sudo \
 	wget \
 	build-essential \
+	autoconf \
+	automake \
+	libtool \
+	re2c \
+	flex \
+	bison \
 	gcc-5 \
 	libxml2-dev \
-	openssl-dev \
 	libssl-dev \
 	libcurl4-openssl-dev \
 	pkg-config \
@@ -30,7 +35,6 @@ RUN apt-get -y install curl \
 	libgdbm-dev \
 	libdb*-dev \
 	libdb4o-cil-dev \
-	libjpe \
 	libpng12-dev \
 	libxpm-dev \
 	libfreetype6-dev \
@@ -40,7 +44,6 @@ RUN apt-get -y install curl \
 	libicu-dev \
 	icu-devtools \
 	g++ \
-	mysql \
 	mysql-common \
 	mysql-client \
 	libmysqlclient-dev \
@@ -57,7 +60,9 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
 RUN curl -L https://github.com/php/php-src/archive/${PHP_SHA}.tar.gz | tar xvz
 
 # Build php
+RUN rm -rf /usr/local/include && ln -fs /usr/include/x86_64-linux-gnu /usr/local/include
 WORKDIR /tmp/php-src-${PHP_SHA}/
+RUN ./buildconf --force
 RUN ./configure \
 	--prefix=/usr \
 	--build=x86_64-linux-gnu \
@@ -66,7 +71,6 @@ RUN ./configure \
 	--localstatedir=/var \
 	--mandir=/usr/share/man \
 	--disable-debug \
-	--with-regex=php \
 	--disable-rpath \
 	--disable-static \
 	--with-pic \
@@ -81,33 +85,30 @@ RUN ./configure \
 	--enable-exif \
 	--with-gettext \
 	--enable-mbstring \
-	--with-pcre-regex=/usr \
+	--with-pcre-regex \
 	--enable-shmop \
 	--enable-sockets \
 	--enable-wddx \
 	--with-libxml-dir=/usr \
 	--with-zlib \
 	--with-kerberos=/usr \
-	--with-openssl=/usr/ \
+	--with-openssl \
+	--with-openssl-dir=/usr/lib/x86_64-linux-gnu/openssl-1.0.0/ \
 	--enable-soap \
 	--enable-zip \
 	--with-mhash=yes \
-	--with-system-tzdata \
 	--with-mysql-sock=/var/run/mysqld/mysqld.sock \
 	--without-mm \
 	--with-curl=shared,/usr \
 	--with-zlib-dir=/usr \
 	--with-gd=shared,/usr \
 	--enable-gd-native-ttf \
-	--with-gmp=shared,/usr \
+	--with-gmp=shared \
 	--with-jpeg-dir=shared,/usr \
 	--with-xpm-dir=shared,/usr/X11R6 \
 	--with-png-dir=shared,/usr \
 	--with-freetype-dir=shared,/usr \
-	--with-vpx-dir=shared,/usr \
 	--enable-intl=shared \
-	--without-t1lib \
-	--with-mysql=shared,/usr \
 	--with-mysqli=shared,/usr/bin/mysql_config \
 	--with-pspell=shared,/usr \
 	--with-recode=shared,/usr \
@@ -124,7 +125,7 @@ RUN apt-get -y install checkinstall
 WORKDIR /tmp/php-src-${PHP_SHA}/
 RUN make clean
 RUN make -j2 prof-gen
-RUN sapi/cgi/php -T 1000 /tmp/wordpress/index.php
+RUN sapi/cgi/php-cgi -T 1000 /tmp/wordpress/index.php
 RUN make prof-clean
 RUN make -j2 prof-use
 RUN checkinstall -y --pkgname="php-${PHP_VERSION}-${PHP_SHA}" -D make install
