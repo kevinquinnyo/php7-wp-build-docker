@@ -10,11 +10,11 @@ build:
 	sed "s/__UBUNTU_RELEASE__/${UBUNTU_RELEASE}/g" Dockerfile > Dockerfile-${UBUNTU_RELEASE}
 	sed -i "s/__PHP_VERSION__/${PHP_VERSION}/g" Dockerfile-${UBUNTU_RELEASE}
 	sed -i "s/__PHP_SHA__/${PHP_SHA}/g" Dockerfile-${UBUNTU_RELEASE}
-	docker build -no-cache -t php-${PHP_VERSION} -f Dockerfile-${UBUNTU_RELEASE} .
+	docker build -t php-${PHP_VERSION} -f Dockerfile-${UBUNTU_RELEASE} .
 
 cp:
 	mkdir -p ./${UBUNTU_RELEASE}
-	docker create --name=php-build php-build && docker cp php-build:/tmp/php-build/php_${PHP_VERSION}-${PHP_SHA}_amd64.deb . && docker rm -f php-build
+	docker create --name=php-build php-${PHP_VERSION} && docker cp php-build:/tmp/php-src-${PHP_SHA}/php-wordpress-optimized_${PHP_VERSION}-1_amd64.deb ./${UBUNTU_RELEASE}/ && docker rm -f php-build
 
 clean:
 	rm -f Dockerfile-*

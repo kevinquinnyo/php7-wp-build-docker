@@ -128,5 +128,9 @@ RUN make -j2 prof-gen
 RUN sapi/cgi/php-cgi -T 1000 /tmp/wordpress/index.php
 RUN make prof-clean
 RUN make -j2 prof-use
-RUN checkinstall -y --pkgname="php-${PHP_VERSION}-${PHP_SHA}" -D make install
+RUN checkinstall -y -D --pkgversion=${PHP_VERSION} \
+	--pkgname="php-wordpress-optimized" \
+	--pkgrelease=${PHP_RELEASE} \
+	--maintainer="kevin.quinn@totalserversolutions.com" \
+	 make install
 
